@@ -23,8 +23,8 @@ class _AddUserPageState extends State<AddUserPage> {
       final currentDate = DateTime.now();
 
       if (validity == '30 Days') {
-        _endDateController.text =
-            DateFormat('MM/dd/yyyy').format(currentDate.add(Duration(days: 30)));
+        _endDateController.text = DateFormat('MM/dd/yyyy')
+            .format(currentDate.add(Duration(days: 30)));
       } else if (validity == '1 Year') {
         _endDateController.text = DateFormat('MM/dd/yyyy').format(
             DateTime(currentDate.year + 1, currentDate.month, currentDate.day));
@@ -70,12 +70,15 @@ class _AddUserPageState extends State<AddUserPage> {
             children: [
               _buildTextField('Name', 'User\'s Name', _nameController),
               _buildValidityButtons(),
-              _buildTextField('Selected Validity', 'Selected Validity',
-                  _validityController, readOnly: true),
+              _buildTextField(
+                  'Selected Validity', 'Selected Validity', _validityController,
+                  readOnly: true),
               _buildTextField('Additional Note', 'Add a note or leave empty',
-                  _noteController, maxLines: 7),
-              _buildTextField('Expected End Date', 'xx/xx/xxxx',
-                  _endDateController, readOnly: true),
+                  _noteController,
+                  maxLines: 7),
+              _buildTextField(
+                  'Expected End Date', 'xx/xx/xxxx', _endDateController,
+                  readOnly: true),
               const SizedBox(height: 30),
               Center(
                 child: ElevatedButton(
@@ -105,8 +108,8 @@ class _AddUserPageState extends State<AddUserPage> {
     );
   }
 
-  Widget _buildTextField(String label, String hintText,
-      TextEditingController controller,
+  Widget _buildTextField(
+      String label, String hintText, TextEditingController controller,
       {bool readOnly = false, int maxLines = 1}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,62 +142,67 @@ class _AddUserPageState extends State<AddUserPage> {
   }
 
   Widget _buildValidityButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: ['30 Days', '1 Year', 'Lifetime', '10 mins']
-          .map((validity) => OutlinedButton(
-                onPressed: () => setValidity(validity),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(
-                      color: Color.fromARGB(255, 241, 238, 94)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: ['30 Days', '1 Year', 'Lifetime', '10 mins']
+            .map((validity) => Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: OutlinedButton(
+                    onPressed: () => setValidity(validity),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(
+                          color: Color.fromARGB(255, 241, 238, 94)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                    ),
+                    child: Text(
+                      validity,
+                      style: const TextStyle(color: Colors.white),
+                    ),
                   ),
-                ),
-                child: Text(
-                  validity,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ))
-          .toList(),
+                ))
+            .toList(),
+      ),
     );
   }
 
-void _addUser() {
-  final userName = _nameController.text.trim();
-  final validity = _validityController.text.trim();
-  final note = _noteController.text.trim();
-  final endDate = _endDateController.text.trim();
+  void _addUser() {
+    final userName = _nameController.text.trim();
+    final validity = _validityController.text.trim();
+    final note = _noteController.text.trim();
+    final endDate = _endDateController.text.trim();
 
-  if (userName.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Name cannot be empty!')),
-    );
-    return;
+    if (userName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Name cannot be empty!')),
+      );
+      return;
+    }
+
+    final user = {
+      'name': userName,
+      'timeLeft': validity.isEmpty ? 'Lifetime' : validity,
+      'note': note.isEmpty ? 'Active' : note,
+      'endDate': endDate.isEmpty ? 'N/A' : endDate,
+      'actions': '', // Provide default value for actions
+    };
+
+    print("User Data before adding: $user");
+
+    final userViewModel = Provider.of<UserViewModel>(context, listen: false);
+
+    userViewModel.addUser(user).then((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User added successfully!')),
+      );
+      Navigator.pop(context);
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $error')),
+      );
+    });
   }
-
-  final user = {
-    'name': userName,
-    'timeLeft': validity.isEmpty ? 'Lifetime' : validity,
-    'note': note.isEmpty ? 'Active' : note,
-    'endDate': endDate.isEmpty ? 'N/A' : endDate,
-    'actions': '', // Provide default value for actions
-  };
-
-  print("User Data before adding: $user");
-
-  final userViewModel = Provider.of<UserViewModel>(context, listen: false);
-
-  userViewModel.addUser(user).then((_) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('User added successfully!')),
-    );
-    Navigator.pop(context);
-  }).catchError((error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: $error')),
-    );
-  });
-}
-
 }
